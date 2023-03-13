@@ -1,3 +1,26 @@
+/////Observer
+type Listener<EventType> = (ev: EventType) => void;
+
+function createObserver<EventType>(): {
+  subscribe: (listener: Listener<EventType>) => () => void;
+  publish: (event: EventType) => void;
+} {
+  let listeners: Listener<EventType>[] = [];
+
+  return {
+    subscribe: (listener: Listener<EventType>): (() => void) => {
+      listeners.push(listener);
+
+      return () => {
+        listeners = listeners.filter((l) => l === listener);
+      };
+    },
+    publish: (event: EventType) => {
+      listeners.forEach((l) => l(event));
+    },
+  };
+}
+
 interface pokemon {
   id: string;
   attack: number;
@@ -15,7 +38,7 @@ function createDatabase<T extends BaseRecord>() {
   class inMemoryDatabase<T extends BaseRecord> implements Database<T> {
     private db: Record<string, T> = {};
 
-    static instamnce: inMemoryDatabase = new inMemoryDatabase();
+    static instance: inMemoryDatabase = new inMemoryDatabase();
     private constructor() {}
 
     public set(newValue: T): void {
@@ -31,9 +54,9 @@ function createDatabase<T extends BaseRecord>() {
 }
 const PokemonDB = createDatabase<pokemon>();
 
-PokemonDB.instamnce.set({ id: "Bulbasaur", attack: 50, defense: 10 });
-PokemonDB.instamnce.set({ id: "BigBulba", attack: 100, defense: 200 });
+PokemonDB.instance.set({ id: "Bulbasaur", attack: 50, defense: 10 });
+PokemonDB.instance.set({ id: "BigBulba", attack: 100, defense: 200 });
 
-console.log(PokemonDB.instamnce.get("Bulbasaur"));
-console.log(PokemonDB.instamnce.get("BigBulba"));
-// console.log(pokemonDB.instamnce.get("");
+console.log(PokemonDB.instance.get("Bulbasaur"));
+console.log(PokemonDB.instance.get("BigBulba"));
+// console.log(pokemonDB.instance);
