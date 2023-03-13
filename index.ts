@@ -15,6 +15,9 @@ function createDatabase<T extends BaseRecord>() {
   class inMemoryDatabase<T extends BaseRecord> implements Database<T> {
     private db: Record<string, T> = {};
 
+    static instamnce: inMemoryDatabase = new inMemoryDatabase();
+    private constructor() {}
+
     public set(newValue: T): void {
       this.db[newValue.id] = newValue;
     }
@@ -23,15 +26,14 @@ function createDatabase<T extends BaseRecord>() {
       return this.db[id];
     }
   }
+  // const db = new inMemoryDatabase();
   return inMemoryDatabase;
 }
-const pokemonDB = createDatabase<pokemon>();
-const PokemonDB = new pokemonDB();
+const PokemonDB = createDatabase<pokemon>();
 
-PokemonDB.set({ id: "Bulbasaur", attack: 50, defense: 10 });
-PokemonDB.set({ id: "BigBulba", attack: 100, defense: 200 });
+PokemonDB.instamnce.set({ id: "Bulbasaur", attack: 50, defense: 10 });
+PokemonDB.instamnce.set({ id: "BigBulba", attack: 100, defense: 200 });
 
-
-console.log(PokemonDB.get("Bulbasaur"));
-console.log(PokemonDB.get("BigBulba"));
-console.log(pokemonDB);
+console.log(PokemonDB.instamnce.get("Bulbasaur"));
+console.log(PokemonDB.instamnce.get("BigBulba"));
+// console.log(pokemonDB.instamnce.get("");
