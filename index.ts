@@ -26,6 +26,16 @@ interface pokemon {
   attack: number;
   defense: number;
 }
+
+interface beforSetEvent<T> {
+  value: T;
+  newalue: T;
+}
+
+interface afterSetEvent<T> {
+  value: T;
+}
+
 interface BaseRecord {
   id: string;
 }
@@ -33,30 +43,56 @@ interface BaseRecord {
 interface Database<T extends BaseRecord> {
   set(newValue: T): void;
   get(id: string): T | undefined;
+
+  onBeforeAdd(listener: Listener<beforSetEvent<T>>): () => void;
+  onAfterAdd(listener: Listener<afterSetEvent<T>>): () => void;
 }
 function createDatabase<T extends BaseRecord>() {
   class inMemoryDatabase<T extends BaseRecord> implements Database<T> {
     private db: Record<string, T> = {};
 
     static instance: inMemoryDatabase = new inMemoryDatabase();
+
+    private beforeAddListeners = createObserver<beforSetEvent<T>>();
+    private afterAddListeners = createObserver<afterSetEvent<T>>();
+
     private constructor() {}
 
     public set(newValue: T): void {
+      this.beforeAddListeners.publish({
+        newValue,
+        value: this.db[newValue.id],
+      });
       this.db[newValue.id] = newValue;
+
+      this.afterAddListeners.publish({ value: newValue });
     }
 
     public get(id: string): T {
       return this.db[id];
+    }
+
+    onBeforeAdd(listener: Listener<beforSetEvent<T>>): () => void {
+      return this.beforeAddListeners.subscribe(listener);
+    }
+    onAfterAdd(listener: Listener<afterSetEvent<T>>): () => void {
+      return this.afterAddListeners.subscribe(listener);
     }
   }
   // const db = new inMemoryDatabase();
   return inMemoryDatabase;
 }
 const PokemonDB = createDatabase<pokemon>();
+const unsubscribe = PokemonDB.instance.onAfterAdd(({ value }) => {
+  console.log(value);
+});
 
 PokemonDB.instance.set({ id: "Bulbasaur", attack: 50, defense: 10 });
+unsubscribe();
+
 PokemonDB.instance.set({ id: "BigBulba", attack: 100, defense: 200 });
 
-console.log(PokemonDB.instance.get("Bulbasaur"));
-console.log(PokemonDB.instance.get("BigBulba"));
+// console.log(PokemonDB.instance.get("Bulbasaur"));
+
+// console.log(PokemonDB.instance.get("BigBulba"));
 // console.log(pokemonDB.instance);
