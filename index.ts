@@ -46,6 +46,8 @@ interface Database<T extends BaseRecord> {
 
   onBeforeAdd(listener: Listener<beforSetEvent<T>>): () => void;
   onAfterAdd(listener: Listener<afterSetEvent<T>>): () => void;
+
+  visit(visitor: (item: T) => void): void;
 }
 function createDatabase<T extends BaseRecord>() {
   class inMemoryDatabase<T extends BaseRecord> implements Database<T> {
@@ -78,6 +80,11 @@ function createDatabase<T extends BaseRecord>() {
     onAfterAdd(listener: Listener<afterSetEvent<T>>): () => void {
       return this.afterAddListeners.subscribe(listener);
     }
+
+    ////////////////////////////////////////////////////////////////
+    visit(visitor: (item: T) => void): void {
+      Object.values(this.db).forEach(visitor);
+    }
   }
   // const db = new inMemoryDatabase();
   return inMemoryDatabase;
@@ -88,9 +95,10 @@ const unsubscribe = PokemonDB.instance.onAfterAdd(({ value }) => {
 });
 
 PokemonDB.instance.set({ id: "Bulbasaur", attack: 50, defense: 10 });
-unsubscribe();
+// unsubscribe();
 
 PokemonDB.instance.set({ id: "BigBulba", attack: 100, defense: 200 });
+PokemonDB.instance.visit((item: { id: any; }) => console.log(item.id));
 
 // console.log(PokemonDB.instance.get("Bulbasaur"));
 
